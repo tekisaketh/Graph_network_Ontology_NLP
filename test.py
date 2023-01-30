@@ -12,7 +12,8 @@ searchreq = {"lang":"en","searchFields":["summary","title"],"query":"deep learni
 payload = requests.post(url, json=searchreq)
 
 json_pl = payload.json()
-info  = json_pl.get('results')[0].get('value')
+info  = json_pl.get('results')
+#.get('value')
 
 
 #Dumping the payload in a file to test the data
