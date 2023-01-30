@@ -16,6 +16,6 @@ info  = json_pl.get('results')[0].get('value')
 
 
 #Dumping the payload in a file to test the data
-file1 = open("./Code/output.txt",'w')
+file1 = open("output.txt",'w')
 file1.write(str(info))
 file1.close()
