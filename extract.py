@@ -2,7 +2,7 @@ import requests
 #import pandas
 import json
 import math
-#import connection
+import connection
 from multiprocessing import Process
 
 #global variables
@@ -12,7 +12,11 @@ global searchreq
 
 
 def getdata(**kwargs):
+
     for keyword in kwargs.get('keywords_list'):
+
+        session = connection.est_connection()
+        
         url = 'https://scanr-api.enseignementsup-recherche.gouv.fr/api/v2/publications/search'
 
         #initializing the global variables to default values to check for total items
@@ -20,13 +24,12 @@ def getdata(**kwargs):
         count=0
         page_size = 1
         type_filter = ["thesis","publication"]
-        fields_list = ["id","title","submissionDate","authors","publicationDate","productionType","keywords"]
+        fields_list = ["id","title","submissionDate","authors","publicationDate","productionType","keywords","affilications"]
         search_fields = ["summary","title"]
         query_string = keyword
         #query_string = "deep learning computer vision"
 
         searchreq = {"lang":"en","searchFields":search_fields,"query":query_string,"page":page_no,"pageSize":page_size,"sourceFields":fields_list}
-
 
         #requesting the API for the data using the search request parameter to calculate no.of loops required
         payload = requests.post(url, json=searchreq)
@@ -36,8 +39,8 @@ def getdata(**kwargs):
         iter = math.ceil(json_pl.get('total')/size1)
 
         #using two files to store the unfiltered(raw payload) and filtered data
-        file1 = open("./Code/output.txt",'w+', encoding="utf-8")
-        file2 = open("./Code/raw_sample.txt",'w+', encoding="utf-8")
+        file1 = open("output.txt",'w+', encoding="utf-8")
+        file2 = open("raw_sample.txt",'w+', encoding="utf-8")
         file2.write(str(payload.text))
         file2.close()
         print("keyword: ",keyword)
@@ -59,6 +62,11 @@ def getdata(**kwargs):
                         count+=1
                         file1.write(str(pub))
                         file1.write("\n")
+                        if(pub.get('title').get('default')):
+                            param_list = [str(pub.get('id')),str(pub.get('productionType')),str(pub.get('title').get('default')),keyword]
+                        else:
+                            param_list = [str(pub.get('id')),str(pub.get('productionType')),str(""),keyword]
+                        session.execute_write(connection.create_node,*param_list)
                     except Exception as e:
                         print(e)
 
@@ -68,7 +76,7 @@ def getdata(**kwargs):
 
 if __name__ == '__main__':
     
-    keywords = ['deep learning','artificial intelligence','machine learning','computer vision']
+    keywords = ['computer vision','deep learning']
     dict1 = {'size1':1000,'keywords_list':keywords}
     tasks = Process(target=getdata,kwargs=dict1)
     tasks.start()
