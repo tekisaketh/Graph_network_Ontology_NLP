@@ -24,22 +24,21 @@ def getdata(**kwargs):
         page_size = 1
         fields_list = ["*"]
         search_fields = ["summary","title"]
-        query_string = keyword
-        searchreq = {"lang":"en","searchFields":search_fields,"query":query_string,"page":page_no,"pageSize":page_size,"sourceFields":fields_list,"filters":{"productionType":{"type":"MultiValueSearchFilter","op":"any","values":["thesis","publication"]}}}
+        searchreq = {"lang":"en","searchFields":search_fields,"query":keyword,"page":page_no,"pageSize":page_size,"sourceFields":fields_list,"filters":{"productionType":{"type":"MultiValueSearchFilter","op":"any","values":["thesis","publication"]}}}
 
         #requesting the API for the data using the search request parameter to calculate no.of loops required
         payload = requests.post(url, json=searchreq)
         json_pl = json.loads(payload.text)
-        size1 = kwargs.get('size1')
-        #iter = math.ceil(json_pl.get('total')/size1)
+        searchreq['pageSize'] = kwargs.get('payload_size')
+        max_iter = math.ceil(json_pl.get('total')/kwargs.get('payload_size'))
         print("keyword: ",keyword)
         
         #file1 = open("output_pub.txt","w+",encoding='utf-8')
-        data, summary = session.execute_read(connection.get_pub_ids,keyword)
-        #to extract the each value parameter's data (one at a time)
-        for page_no in range(0,1):
+        existing_pubs = session.execute_read(connection.get_pub_ids,keyword)
 
-            searchreq = {"lang":"en","searchFields":search_fields,"query":query_string,"page":page_no,"pageSize":size1,"sourceFields":fields_list,"filters":{"productionType":{"type":"MultiValueSearchFilter","op":"any","values":["thesis","publication"]}}}
+        for page_no in range(0,1): #set 1 to max_iter to get all nodes
+            
+            searchreq['page']=page_no
             payload = requests.post(url, json=searchreq)
             json_pl = json.loads(payload.text)
 
@@ -50,7 +49,8 @@ def getdata(**kwargs):
                         #file1.write(str(pub))
                         #file1.write("\n\n")
                         pub = json_pl.get('results')[item].get('value')
-                        if(pub.get('id') not in data):
+                        if(pub.get('id') not in existing_pubs):
+                            print("creating network")
                             connection.create_network(session,keyword,**pub)   
                     except Exception as e:
                         print(e)
@@ -61,8 +61,16 @@ def getdata(**kwargs):
 
 if __name__ == '__main__':
     
-    keywords = ['computer vision','deep learning','machine learning','artificial intelligence','neural networks','frugal ai','linear regression','logistic regression','Random Forests','recurrent neural network','convolutional neural network']
-    dict1 = {'size1':500,'keywords_list':keywords}
+    #keywords = ['computer vision','deep learning','machine learning','artificial intelligence','neural networks','frugal ai','linear regression','logistic regression','Random Forests','recurrent neural network','convolutional neural network']
+    session = connection.est_connection()
+    data = session.execute_read(connection.get_keyword_nodes,'primary',0)
+    if(data!=[]):
+        dict1 = {'payload_size':100,'keywords_list':data}
+    else:
+        f = open("keywords.txt",encoding='utf-8')
+        keywords = f.read()
+        dict1 = {'payload_size':100,'keywords_list':keywords}
+    #print(dict1)
     tasks = Process(target=getdata,kwargs=dict1)
     tasks.start()
     tasks.join()

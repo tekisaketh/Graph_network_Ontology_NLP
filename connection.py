@@ -23,12 +23,15 @@ def est_connection():
             return(e)
 
 def create_main_nodes(tx,id,prodType,ttype,title,summary,pubdate,lastupdate,keyword):
-    result = tx.run("""MERGE (p:Publication {name:$ptype,id:$id,type:$ttype,title:$title,summary:$summary,publicationDate:datetime({epochSeconds:$pubdate}),LastUpdatedatScanR:datetime({epochSeconds:$lastupdate})})
-    MERGE (k:keyword {name:$keyword,type:"primary",lastupdated:datetime()})
+    result = tx.run("""MERGE (p:Publication {name:$ptype,id:$id,type:$ttype,flag:"True",title:$title,summary:$summary,publicationDate:datetime({epochSeconds:$pubdate}),LastUpdatedatScanR:datetime({epochSeconds:$lastupdate})})
+    MERGE (k:keyword {name:$keyword,type:"primary"})
     MERGE (p)<-[r:FOUND_IN]-(k)
     """,id=id,ptype=prodType,ttype=ttype,title=title,summary=summary,pubdate=pubdate,lastupdate=lastupdate,keyword=keyword)
     summary = result.consume()
     return summary
+
+def set_keyword_time(tx,keyword):
+    tx.run("""MATCH (k:keyword {name:$keyword,type:"primary"}) set k.lastupdated=datetime()""",keyword=keyword)
 
 def create_affiliation_nodes(tx,p_id,id,kind,label,address,city,country):
     result = tx.run("""MATCH (p:Publication {id:$p_id})
@@ -46,30 +49,38 @@ def create_author_nodes(tx,p_id,id,firstname,lastname,gender,role):
     summary = result.consume()
     return summary
 
-def get_keyword_nodes(tx,k_type):
+def create_keynodes(tx,p_id,keyword,flag):
+    result = tx.run("""MATCH (p:Publication {id:$p_id}) 
+    MERGE (k:keyword {name:$keyword,type:$flag})
+    MERGE (p)<-[r:FOUND_IN]-(k)
+    """,p_id=p_id,keyword=keyword,flag=flag)
+    summary = result.consume()
+    return summary
+      
+
+def get_keyword_nodes(tx,k_type,flag):
     result = tx.run("""MATCH (k:keyword {type:$k_type}) return k.name,k.lastupdated
     """,k_type=k_type)
-    results = result.values()   
-    summary = result.consume()
-    return results, summary
+    if(flag==1):
+        results = result.values()
+    else:
+        results = result.value()   
+    return results
 
 def get_pub_summary(tx):
-    result = tx.run("""MATCH (p:Publication) MATCH (k:keyword {type:'Secondary'}) where not (p)-[:FOUND_IN]-(k) return p.id, p.summary""")
+    result = tx.run("""MATCH (p:Publication {flag:'True'}) return p.id as id, p.summary as summary""")
     results = result.to_df()
-    summary = result.consume()
-    return results, summary
+    return results
 
 def get_pub_ids(tx,keyword):
     if(keyword=='all'):
         result = tx.run("""MATCH (p:Publication) return p.id""")
         results = result.value()
-        summary = result.consume()
-        return results,summary
+        return results
     else:
         result = tx.run("""MATCH (p:Publication) MATCH(k:keyword {name:$keyword,type:"primary"}) where (p)-[:FOUND_IN]-(k) RETURN p.id""",keyword=keyword)
         results = result.value()
-        summary = result.consume()
-        return results,summary     
+        return results     
 
 
 def check_value_dict(x,y):
@@ -142,6 +153,7 @@ def create_network(con_session,keyword,**kwargs):
     if(flag1):
         param_list = [paper_id,str(kwargs.get('productionType')),t_type,title,summary,pubdate,lastupdate,keyword]
         con_session.execute_write(create_main_nodes,*param_list)
+        con_session.execute_write(set_keyword_time,keyword)
 
         if(kwargs.get('authors')):
             for dict_person in kwargs.get('authors'):
