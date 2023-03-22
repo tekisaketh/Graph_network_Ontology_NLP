@@ -1,0 +1,48 @@
+Adversarial Machine Learning
+AI ethics
+AI framework
+Artificial Intelligence
+Artificial Neural Network
+Backpropagation
+Bias
+Convolutional Neural Network
+Cognitive computing
+Computer vision
+Data science
+Data scientist
+Deep learning
+Deep Neural Network
+Regression
+Echo State Network
+Facial recognition
+Game AI
+Generative Adversarial Network
+Hyperparameter
+Image recognition
+Image segmentation
+ImageNet
+Random Forests
+Knowledge-based System
+Machine Learning
+MLOps
+Neural network
+Natural Language Generation
+Natural Language Processing
+Natural Language Understanding
+Optical Character Recognition
+Pattern recognition
+Prescriptive analytics
+Predictive analytics
+Pruning
+Quantum computing
+Recurrent Neural Network
+Recommendation engines
+Reinforcement learning
+Robotic Process Automation
+Receiver Operating Characteristic Curve
+Semantic annotation
+Sentiment analysis
+Supervised learning
+Transfer learning
+Unsupervised learning
+Visual Recognition
