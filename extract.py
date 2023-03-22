@@ -50,7 +50,7 @@ def getdata(**kwargs):
                         #file1.write("\n\n")
                         pub = json_pl.get('results')[item].get('value')
                         if(pub.get('id') not in existing_pubs):
-                            print("creating network")
+                            #print("creating network")
                             connection.create_network(session,keyword,**pub)   
                     except Exception as e:
                         print(e)
@@ -67,8 +67,7 @@ if __name__ == '__main__':
     if(data!=[]):
         dict1 = {'payload_size':100,'keywords_list':data}
     else:
-        f = open("keywords.txt",encoding='utf-8')
-        keywords = f.read()
+        keywords = open("keywords.txt",'r',encoding='utf-8').read().lower().split('\n')
         dict1 = {'payload_size':100,'keywords_list':keywords}
     #print(dict1)
     tasks = Process(target=getdata,kwargs=dict1)

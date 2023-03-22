@@ -33,6 +33,9 @@ def create_main_nodes(tx,id,prodType,ttype,title,summary,pubdate,lastupdate,keyw
 def set_keyword_time(tx,keyword):
     tx.run("""MATCH (k:keyword {name:$keyword,type:"primary"}) set k.lastupdated=datetime()""",keyword=keyword)
 
+def set_pub_flag(tx,p_id):
+    tx.run("""MATCH (p:Publication {id:$p_id}) set p.flag="False" """,p_id=p_id)
+
 def create_affiliation_nodes(tx,p_id,id,kind,label,address,city,country):
     result = tx.run("""MATCH (p:Publication {id:$p_id})
     MERGE (f:Affiliation {id:$id,kind:$kind,label:$label,address:$address,city:$city,country:$country})
@@ -129,8 +132,8 @@ def check_affiliations(x):
     return [id,kind,label,address,city,country]
 
 def time_items(x,y):
-    if(x.get("y")):
-        return int(x.get("y")/1000)
+    if(x.get(y)):
+        return int(x.get(y)/1000)
     else:
         return 0    
 
