@@ -1,4 +1,6 @@
-# Data Science Mission - Msc. Data Science & AI Strategy Program
+# Graph Network and AI based Ontology
+
+Data Science Mission - Msc. Data Science & AI Strategy Program
 
 Company: Datacraft
 
